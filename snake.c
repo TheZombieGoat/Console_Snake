@@ -1,11 +1,12 @@
 #define TB_IMPL
 #include "termbox2.h"
-#define BD 20 //border distance
-#define SNAKE_COLOR TB_BLUE
+#define BD 4 //border distance
+#define BD_HEIGHT tb_height() 
+#define BD_WIDTH tb_width()
+#define SNAKE_COLOR TB_GREEN
 #define BORDER_COLOR TB_WHITE
 
 enum dir {up,down,left,right};
-
 int y = 0;
 int x = 0;
 
@@ -20,6 +21,23 @@ void print_list(snake *s){
     while(s != NULL){
         tb_printf(s->sx, s->sy, SNAKE_COLOR, 0, "██");
         s = s->next;
+    }
+}
+
+void print_border(){
+    if(BD > BD_HEIGHT || BD > BD_WIDTH){
+        tb_printf(20, 20, BORDER_COLOR, 0, "BORDER SIZE ERROR: BORDERS TOO SMALLz");
+        return;
+    }
+    int height = BD_HEIGHT - BD;
+    int width = BD_WIDTH - BD;
+    for(int i = BD; i <= width; i+=2){   //printing the horizontal border
+        tb_printf(i, BD, BORDER_COLOR, 0, "██");
+        tb_printf(i, height, BORDER_COLOR, 0, "██");
+    }
+    for(int i = BD; i <= height; i++){
+        tb_printf(BD, i, BORDER_COLOR, 0, "██");
+        tb_printf(width, i, BORDER_COLOR, 0, "██");
     }
 }
 
@@ -79,24 +97,16 @@ snake *add_end(snake *tail, int sx, int sy){
 
 
 int main(int argc, char **argv) {
-    int width = tb_width();
-    int height = tb_height();
     int curDir;
     struct tb_event ev;
     snake *head;
     head = snake_init(head,50,50);
     snake *tail = head;
     tail = add_end(tail,52,50);
-    tail = add_end(tail,54,50);
-    tail = add_end(tail,56,50);
+    int ax, ay;
 
     tb_init();
     tb_poll_event(&ev);
-    /*
-    head = switch_front(head,tail,up);
-    tail = tail->prev;
-    tail->next = NULL;
-    */
     tb_printf(50, 20, 0, 0, "%d  %d", tail->sx,tail->sy);
     tb_printf(60, 20, 0, 0, "%d  %d", head->sx,head->sy);
     tb_present();
@@ -104,20 +114,27 @@ int main(int argc, char **argv) {
         tb_peek_event(&ev,200);
         switch(ev.key){
             case TB_KEY_ARROW_UP:
+                if(curDir == up || curDir == down)
+                    break;
                 curDir = up;
-                tb_printf(20, 20, 0, 0, "pressed UP");
                 break;
             case TB_KEY_ARROW_DOWN:
-                tb_printf(20, 20, 0, 0, "pressed DOWN");
+                if(curDir == up || curDir == down)
+                    break;
                 curDir = down;
                 break; 
             case TB_KEY_ARROW_LEFT:
-                tb_printf(20, 20, 0, 0, "pressed LEFT");
+                if(curDir == left || curDir == right)
+                    break;
                 curDir = left;
                 break;
             case TB_KEY_ARROW_RIGHT:
+                if(curDir == left || curDir == right)
+                    break;
                 curDir = right;
-                tb_printf(20, 20, 0, 0, "pressed RIGHT");
+                break;
+            case TB_KEY_HOME:
+                tail = add_end(tail,30,30);
                 break;
             default:
                 break;;
@@ -126,8 +143,8 @@ int main(int argc, char **argv) {
         head = switch_front(head,tail,curDir);
         tail = tail->prev;
         tail->next = NULL;
+        print_border();
         print_list(head);
-        print_cord(head);
         tb_present();      
     }
     tb_printf(10, 10, TB_GREEN, 200, "LIES");
