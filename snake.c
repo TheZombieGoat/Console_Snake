@@ -1,4 +1,5 @@
 #define TB_IMPL
+#include <stdlib.h> 
 #include "termbox2.h"
 #define BD 4 //border distance
 #define BD_HEIGHT tb_height() 
@@ -7,8 +8,6 @@
 #define BORDER_COLOR TB_WHITE
 
 enum dir {up,down,left,right};
-int y = 0;
-int x = 0;
 
 typedef struct Snake {
   int sx;
@@ -24,9 +23,22 @@ void print_list(snake *s){
     }
 }
 
+
+
+//rand() % (max_number + 1 - minimum_number) + minimum_number
+void print_apple(int *x, int *y){
+    *x = rand() % (BD_WIDTH - 4 - BD) + BD + 2;
+    *y = rand() % (BD_HEIGHT - 4 - BD) + BD + 2;
+    tb_printf(*x, *y, TB_RED, 0, "██");
+}
+
+void eat(){
+
+}
+
 void print_border(){
     if(BD > BD_HEIGHT || BD > BD_WIDTH){
-        tb_printf(20, 20, BORDER_COLOR, 0, "BORDER SIZE ERROR: BORDERS TOO SMALLz");
+        tb_printf(20, 20, BORDER_COLOR, 0, "BORDER SIZE ERROR: BORDERS TOO SMALL");
         return;
     }
     int height = BD_HEIGHT - BD;
@@ -38,13 +50,6 @@ void print_border(){
     for(int i = BD; i <= height; i++){
         tb_printf(BD, i, BORDER_COLOR, 0, "██");
         tb_printf(width, i, BORDER_COLOR, 0, "██");
-    }
-}
-
-void print_cord(snake *s){
-    while(s != NULL){
-        tb_printf(++x, ++y, SNAKE_COLOR, 0, "%d   %d", s->sx, s->sy);
-        s = s->next;
     }
 }
 
@@ -97,19 +102,16 @@ snake *add_end(snake *tail, int sx, int sy){
 
 
 int main(int argc, char **argv) {
-    int curDir;
+    int ax, ay, curDir;
     struct tb_event ev;
     snake *head;
     head = snake_init(head,50,50);
     snake *tail = head;
     tail = add_end(tail,52,50);
-    int ax, ay;
 
     tb_init();
     tb_poll_event(&ev);
-    tb_printf(50, 20, 0, 0, "%d  %d", tail->sx,tail->sy);
-    tb_printf(60, 20, 0, 0, "%d  %d", head->sx,head->sy);
-    tb_present();
+    print_apple(&ax,&ay);
     while(ev.ch != 'q'){
         tb_peek_event(&ev,200);
         switch(ev.key){
@@ -133,16 +135,17 @@ int main(int argc, char **argv) {
                     break;
                 curDir = right;
                 break;
-            case TB_KEY_HOME:
-                tail = add_end(tail,30,30);
-                break;
             default:
-                break;;
+                break;
         }
+        if((head->sx == ax || head->sx == ax+1) && head->sy == ay)
+            print_apple(&ax,&ay);
         tb_clear();
         head = switch_front(head,tail,curDir);
         tail = tail->prev;
         tail->next = NULL;
+        tb_printf(ax, ay, TB_RED, 0, "██");
+        tb_printf(2, 2, TB_RED, 0, "%d %d", ax,ay);
         print_border();
         print_list(head);
         tb_present();      
