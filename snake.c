@@ -1,8 +1,8 @@
 #define TB_IMPL
-#include <stdlib.h> 
+#include <stdlib.h>
 #include "termbox2.h"
 #define BD 4 //border distance
-#define BD_HEIGHT tb_height() 
+#define BD_HEIGHT tb_height()
 #define BD_WIDTH tb_width()
 #define SNAKE_COLOR TB_GREEN
 #define BORDER_COLOR TB_WHITE
@@ -31,17 +31,17 @@ void rand_apple(int *x, int *y){
 
 //rand() % (max_number + 1 - minimum_number) + minimum_number
 void print_apple(int *x, int *y, snake *s){
-	snake *p = s;
-	rand_apple(x,y);
-	while(p != NULL){
-	  if(p->sx == *x && p->sy == *y){
-	      rand_apple(x,y);
-	      p = s;  
-	      if(p->sx == *x && p->sy == *y)
-		 rand_apple(x,y); 
-	  }  	  
-	  p = p->next;
-	}
+        snake *p = s;
+        rand_apple(x,y);
+        while(p != NULL){
+          if(p->sx == *x && p->sy == *y){
+              rand_apple(x,y);
+              p = s;
+              if(p->sx == *x && p->sy == *y)
+                 rand_apple(x,y);
+          }
+          p = p->next;
+        }
         tb_printf(*x, *y, TB_RED, 0, "██");
 }
 
@@ -72,12 +72,12 @@ snake *snake_init(snake *s, int sx, int sy){
 }
 
 //testing purposes
-snake *switch_front(snake *head, snake *tail,int dir){  
+snake *switch_front(snake *head, snake *tail,int dir){
     switch(dir){
         case up:
             tail->sx = head->sx;
             tail->sy = head->sy - 1;
-            break; 
+            break;
         case down:
             tail->sx = head->sx;
             tail->sy = head->sy + 1;
@@ -89,7 +89,7 @@ snake *switch_front(snake *head, snake *tail,int dir){
         case right:
             tail->sx = head->sx + 2;
             tail->sy = head->sy;
-            break;   
+            break;
     }
 
     if(tail->prev == NULL){
@@ -102,7 +102,7 @@ snake *switch_front(snake *head, snake *tail,int dir){
     }
 }
 
-snake *add_end(snake *tail, int sx, int sy){ 
+snake *add_end(snake *tail, int sx, int sy){
     snake *newhead = snake_init(newhead,sx,sy);
     tail->next = newhead;
     newhead->prev = tail;
@@ -123,6 +123,8 @@ int main(int argc, char **argv) {
     print_apple(&ax,&ay, head);
     int height = BD_HEIGHT - BD;
     int width = BD_WIDTH - BD;
+    int score = 0;
+    int score_cord_x = BD_WIDTH - BD - 20;
 
     while(ev.ch != 'q'){
         tb_peek_event(&ev,200);
@@ -136,7 +138,7 @@ int main(int argc, char **argv) {
                 if(curDir == up || curDir == down)
                     break;
                 curDir = down;
-                break; 
+                break;
             case TB_KEY_ARROW_LEFT:
                 if(curDir == left || curDir == right)
                     break;
@@ -152,32 +154,36 @@ int main(int argc, char **argv) {
         }
         if((head->sx == ax || head->sx == ax+1) && head->sy == ay){ //interaction with apple
             print_apple(&ax,&ay,head);
-	    tail = add_end(tail,head->sx+2,head->sy);
-	}
-	
-	if(head->sx >= width || head->sx <= BD || head->sy >= height || head->sy <= BD)
-		break;
+            tail = add_end(tail,head->sx+2,head->sy);
+            score += 1;
+        }
 
-	p = head->next;
-	while(p != NULL){
-	    if(p->sx == head->sx && p->sy == head->sy){
-		    over = 1;
-		    break;
-	    }
-	    p = p->next;
-	}
-	if(over == 1)
-	    break;
+        if(head->sx >= width || head->sx <= BD || head->sy >= height || head->sy <= BD)
+                break;
+
+        p = head->next;
+        while(p != NULL){
+            if(p->sx == head->sx && p->sy == head->sy){
+                    over = 1;
+                    break;
+            }
+            p = p->next;
+        }
+        if(over == 1)
+            break;
         tb_clear();
         head = switch_front(head,tail,curDir);
         tail = tail->prev;
         tail->next = NULL;
         tb_printf(ax, ay, TB_RED, 0, "██");
+        /* Remove comments to check for co-ords
         tb_printf(2, 2, TB_RED, 0, "Apple cords: %d %d", ax,ay);
-	tb_printf(36, 2, TB_BLUE, 0, "Snake Cords: %d %d", head->sx,head->sy);
+        tb_printf(36, 2, TB_BLUE, 0, "Snake Cords: %d %d", head->sx,head->sy);
+        */
+        tb_printf(score_cord_x, 2, TB_BLUE, 0, "Score: %d", score);
         print_border();
         print_list(head);
-        tb_present();      
+        tb_present();
     }
     tb_printf(10, 10, TB_GREEN, 200, "GAME OVER");
     tb_present();
